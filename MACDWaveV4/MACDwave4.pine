@@ -1,11 +1,7 @@
 //@version=4
 
 study(title="MACD wave", shorttitle="MACDwave", overlay=false)
-///condition
-
-
-crossBool = false
-
+//condition
 
 useCurrentRes = input(true, title="Use Current Chart Resolution?")
 resCustom = input(title="Use Different Timeframe? Uncheck Box Above", type=input.resolution, defval="60")
@@ -36,8 +32,8 @@ plot(abs(r), style=plot.style_columns, color=r>0?color.green:color.red, title="V
 res = useCurrentRes ? timeframe.period : resCustom
 
 fMACD = input(12, minval=1, title="fast MACD")
-sMACD=input(26,minval=1,title="slow MACD")
-signalLenMACD=input(9,minval=1, title="Signal Len MACD")
+sMACD = input(26,minval=1,title="slow MACD")
+signalLenMACD = input(9,minval=1, title="Signal Len MACD")
 
 /////DEMA
 
@@ -108,6 +104,8 @@ plot(smd and outMACD ? outMACD : na, title="MACD Line", color=macd_color, linewi
 //plot(sd and cross(outMACD, outSignal) ? circleYPosition : na, title="Cross", style=plot.style_circles, linewidth=4, color=macd_color)
 hline(0)
 
+
+isGoingDown = false
 
 mixSig = outSignal - Lignesignal
 

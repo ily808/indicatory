@@ -1,0 +1,17 @@
+//@version=4
+// Указание версии для компилятора
+
+study(title="TestScript", shorttitle="Test", overlay=false, format=format.volume, precision=0)
+// Указание имени скрипта, открытие в отдельном окне, цена-число, округление до целого
+
+src = input(title="Бар сделки", type = input.source, defval = close)
+// Использование шаблона для настройки скрипта, со стандартным типом серии close
+plot(close)
+
+
+a = array.new_float(0)
+
+array.push(a, close)
+plot(array.size(a), color=color.red)
+
+plot(open and close, color= color.green)
