@@ -1,0 +1,22 @@
+// @version=4
+// Указание версии для компилятора
+
+study(title = "Security", shorttitle = "Security", overlay = false, format = format.volume, precision = 3)
+// Указание имени скрипта, открытие в отдельном окне, цена-число, округление до целого
+
+bars = input(title = "Сделки", type = input.source, defval = close)
+
+resolution = input(title = "Временной промежуток", type = input.resolution, defval = "60")
+
+n_bars = security(syminfo.tickerid, resolution, bars)
+
+plot(close, color = color.blue)
+plot(n_bars, color = color.red)
+
+
+s2=security(syminfo.tickerid, "D", close, barmerge.gaps_off)
+plot(s2, color = color.green)
+f() => [open, high]
+[o, h] = security(syminfo.tickerid, "D", f())
+[l, c] = security(syminfo.tickerid, "D", [low, close])
+plot((o + h + l + c) / 4, color = color.yellow)

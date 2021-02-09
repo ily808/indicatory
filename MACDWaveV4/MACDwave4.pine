@@ -1,7 +1,9 @@
-//@version=4
+// @version=4
+// Версия компилятора
 
 study(title="MACD wave", shorttitle="MACDwave", overlay=false)
-//condition
+//Название скрипта, открытие в отдельном чарте
+
 
 useCurrentRes = input(true, title="Use Current Chart Resolution?")
 resCustom = input(title="Use Different Timeframe? Uncheck Box Above", type=input.resolution, defval="60")

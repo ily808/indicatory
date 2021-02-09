@@ -1,0 +1,25 @@
+// @version=4
+// Указание версии для компилятора
+
+study(title = "Bars", shorttitle = "Bars", overlay = true, format = format.volume, precision = 3)
+// Указание имени скрипта, открытие в отдельном окне, цена-число, округление до целого
+
+a = array.new_float(0)
+
+array.push(a, close)
+
+label.new(bar_index, close, text = tostring(close))
+
+f_print(_text) =>
+    // Create label on the first bar.
+    dt = time - time[1]
+    var _label = label.new(time + 3*dt, na, _text, xloc.bar_time, yloc.price, color(na), label.style_none, color.gray, size.large, text.align_left)
+    // On next bars, update the label's x and y position, and the text it displays.
+    label.set_xy(_label, time + 3*dt, highest(10)[1])
+    label.set_text(_label, _text)
+
+
+f_print(tostring(array.get(a, 0)))
+// Нумерация баров идет слева направо начиная с нуля
+
+// Нумерация массивов идет справо налево, начиная с 0.
