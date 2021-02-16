@@ -1,0 +1,65 @@
+// @version=4
+// Указание версии для компилятора
+
+study(title = "Массивы", shorttitle = "Массивы", overlay = false, format = format.volume, precision = 3)
+// Указание имени скрипта, открытие в отдельном окне, цена-число, округление до целого
+
+maxBarCross = input(title = "Максимальная число баров", type = input.integer, defval = 100)
+
+bar = input(title = "Сделки", type = input.source, defval = close)
+// С какой частью сделки работаем
+
+chooseResolution = input(title = "Custon Resolution", type = input.bool, defval = false)
+// Селектор для разрешения графика
+
+resolutionCustom = input(title = "Временной промежуток", type = input.resolution, defval = "60")
+// Выбор определенного разрешения
+
+resolution = chooseResolution ? resolutionCustom : timeframe.period
+// Глобальная переменная разрешения
+
+
+PreparedBar = security(syminfo.tickerid, resolution, bar)
+
+f_print(_text) =>
+    // Create label on the first bar.
+    var _label = label.new(bar_index, na, _text, xloc.bar_index, yloc.price, color(na), label.style_none, color.gray, size.large, text.align_left)
+    // On next bars, update the label's x and y position, and the text it displays.
+    label.set_xy(_label, bar_index, highest(10)[1])
+    label.set_text(_label, _text)
+
+
+f_consume_array(_array_in) =>
+    array.get(_array_in, 0)
+//    _seria = array.get(_array_in, 0)
+//    sizeArray = array.size(_array_in)
+//    for i = 1 to (sizeArray - 1)
+//        temp = _seria + array.get(_array_in, i)
+//        _seria := temp
+//
+//    [_seria]
+
+f_showCrossDownLine(_array_in) =>
+    arraySize = array.size(_array_in)
+    currentBar = close[0]
+    isDown = false
+    for i = 1 to maxBarCross
+        prevBar = close[i + 1]
+        if currentBar < prevBar
+            isDown := true
+
+        if (currentBar > prevBar)
+            if (isDown)
+                array.push(_array_in, prevBar)
+
+            isDown := false
+
+        currentBar := prevBar
+
+a = array.new_float(0)
+
+f_showCrossDownLine(a)
+
+plotshape(array.stdev(a), style=shape.xcross)
+
+plot(close)

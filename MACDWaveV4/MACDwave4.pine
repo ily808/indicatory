@@ -1,0 +1,141 @@
+// @version=4
+// Версия компилятора
+
+study(title="MACD wave", shorttitle="MACDwave", overlay=false)
+//Название скрипта, открытие в отдельном чарте
+
+
+useCurrentRes = input(true, title="Use Current Chart Resolution?")
+resCustom = input(title="Use Different Timeframe? Uncheck Box Above", type=input.resolution, defval="60")
+smd = input(true, title="Show MacD & Signal Line? Also Turn Off Dots Below")
+sd = input(true, title="Show Dots When MacD Crosses Signal Line?")
+sh = input(true, title="Show Histogram?")
+macd_colorChange = input(true, title="Change MacD Line Color-Signal Line Cross?")
+hist_colorChange = input(true, title="MacD Histogram 4 Colors?")
+buy_sel_vol = input(false, title="Show Buy Sell VOL?")
+
+
+
+
+longcyc = input(17.5185, title="Long Cycle")
+shortcyc = input(8.3896, title="Short Cycle") 
+sp = input(9.0503, title="Signal Length") 
+src = input(close, title="Source")
+fastcyc = 0.0
+slowcyc = 0.0
+fastcyc := nz(fastcyc[1]) + 2.0 / (1.0 + shortcyc) * (src- nz(fastcyc[1]))
+slowcyc := nz(slowcyc[1]) + 2.0 / (1.0 + longcyc) * (src - nz(slowcyc[1]))
+r = (fastcyc - slowcyc)
+//s = 0.0
+//s := nz(s[1]) + 2.0/(1 + sp)*(r - nz(s[1]))
+//plot(s, color=color.teal, linewidth=2, title="Dinapoli MACD") 
+plot(abs(r), style=plot.style_columns, color=r>0?color.green:color.red, title="Volume")
+
+res = useCurrentRes ? timeframe.period : resCustom
+
+fMACD = input(12, minval=1, title="fast MACD")
+sMACD = input(26,minval=1,title="slow MACD")
+signalLenMACD = input(9,minval=1, title="Signal Len MACD")
+
+/////DEMA
+
+MMEslowa = ema(close,sMACD)
+MMEslowb = ema(MMEslowa,sMACD)
+DEMAslow = ((2 * MMEslowa) - MMEslowb )
+
+MMEfasta = ema(close,fMACD)
+MMEfastb = ema(MMEfasta,fMACD)
+DEMAfast = ((2 * MMEfasta) - MMEfastb)
+
+LigneMACDZeroLag = (DEMAfast - DEMAslow)
+
+MMEsignala = ema(LigneMACDZeroLag, signalLenMACD)
+MMEsignalb = ema(MMEsignala, signalLenMACD)
+Lignesignal = ((2.05 * MMEsignala) - MMEsignalb )
+
+MACDZeroLag = (LigneMACDZeroLag - Lignesignal)
+
+
+/////DEMA Color Definitions
+outDEMA = security(syminfo.tickerid,res,LigneMACDZeroLag)
+outDEMAsig = security(syminfo.tickerid,res,Lignesignal)
+circleDEMApos = Lignesignal
+swapDEMA = MACDZeroLag >= 0 ? color.orange: color.blue
+
+//p1 = plot(LigneMACDZeroLag,color=color.blue,title='LineMACD')
+//p2 = plot(Lignesignal,color=color.red,title='SignalDEMA')
+offsetDEMA=input(0)
+plot(cross(outDEMA, outDEMAsig) ? circleDEMApos: na, title="CrossDEMA", style=plot.style_cross, linewidth=4, color=swapDEMA, offset=offsetDEMA)
+//fill(p1, p2, color=color.blue)
+
+
+
+/////MACD
+
+
+fastMA = ema(src, fMACD)
+slowMA = ema(src, sMACD)
+
+macd = fastMA - slowMA
+signalMACD = sma(macd, signalLenMACD)
+hist = macd - signalMACD
+
+outMACD = security(syminfo.tickerid, res, macd)
+outSignal = security(syminfo.tickerid, res, signalMACD)
+outHist = security(syminfo.tickerid, res, hist)
+
+histA_IsUp = outHist > outHist[1] and outHist > 0
+histA_IsDown = outHist < outHist[1] and outHist > 0
+histB_IsDown = outHist < outHist[1] and outHist <= 0
+histB_IsUp = outHist > outHist[1] and outHist <= 0
+
+/////MACD Color Definitions
+macd_IsAbove = outMACD >= outSignal
+macd_IsBelow = outMACD < outSignal
+
+plot_color = hist_colorChange ? histA_IsUp ? color.aqua : histA_IsDown ? color.blue : histB_IsDown ? color.red : histB_IsUp ? color.maroon : color.yellow : color.gray
+macd_color = macd_colorChange ? macd_IsAbove ? color.orange : color.blue : color.blue
+
+
+circleYPosition = outSignal
+
+
+plot(sh and outHist ? -abs(outHist) : na, title="Histogram", color=plot_color, style=plot.style_histogram, linewidth=4)
+plot(smd and outMACD ? outMACD : na, title="MACD Line", color=macd_color, linewidth=2)
+//plot(smd and outSignal ? outSignal : na, title="Signal Line", color=color.yellow, style=plot.style_line ,linewidth=2)
+//plot(sd and cross(outMACD, outSignal) ? circleYPosition : na, title="Cross", style=plot.style_circles, linewidth=4, color=macd_color)
+hline(0)
+
+
+isGoingDown = false
+
+mixSig = outSignal - Lignesignal
+
+
+plot(mixSig, style=plot.style_circles, color=color.white)
+
+
+
+///// BUYING VOLUME AND SELLING VOLUME //
+BV = iff( (high==low), 0, volume*(close-low)/(high-low))
+SV = iff( (high==low), 0, volume*(high-close)/(high-low))
+
+vol = iff(volume > 0, volume, 1)
+
+TP = BV + SV
+VN = vol / ema(vol,20)
+BPN = BV / ema(BV,20) * VN * 100
+SPN = SV / ema(SV,20) * VN * 100
+TPN = BPN + SPN
+
+
+BPc = BPN > SPN ? BPN : -abs(BPN)
+SPc = SPN > BPN ? SPN : -abs(SPN)
+BPcon = BPc //* 0.001
+SPcon = SPc //* 0.001
+
+//plot(volume, color = palette, style=plot.style_columns, linewidth=3,title="Volume", transp=70)
+plot(buy_sel_vol ? BPcon : na ,title="BuyVolume",color=color.lime,style=plot.style_columns,transp=75)
+plot(buy_sel_vol ? SPcon : na ,title="SellVolume",color=color.red,style=plot.style_columns,transp=75)
+
+
